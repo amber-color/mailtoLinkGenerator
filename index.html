@@ -305,28 +305,25 @@
             el.style.height = el.scrollHeight + "px";
         }
 
+        // URL構造を壊す文字（% & = # ?）と改行のみエンコード、日本語等はそのまま
+        function encodeSpecialChars(str) {
+            return str.replace(/[%&=#?]|\r\n|\r|\n/g, c => encodeURIComponent(c));
+        }
+
         function buildLink() {
-            const to = document.getElementById("to").value.trim().split(/\r?\n/).filter(s => s).join(",");
-            const cc = document.getElementById("cc").value.trim().split(/\r?\n/).filter(s => s).join(",");
-            const bcc = document.getElementById("bcc").value.trim().split(/\r?\n/).filter(s => s).join(",");
-
-            function encodeNewlinesOnly(str) {
-                return str.replace(/\r\n|\r|\n/g, match => encodeURIComponent(match));
-            }
-
-            const subjectRaw = document.getElementById("subject").value.trim();
-            const bodyRaw = document.getElementById("body").value;
-
-            const subject = encodeNewlinesOnly(subjectRaw);
-            const body = encodeNewlinesOnly(bodyRaw);
+            const to      = document.getElementById("to").value.trim().split(/\r?\n/).filter(s => s).join(",");
+            const cc      = document.getElementById("cc").value.trim().split(/\r?\n/).filter(s => s).join(",");
+            const bcc     = document.getElementById("bcc").value.trim().split(/\r?\n/).filter(s => s).join(",");
+            const subject = document.getElementById("subject").value.trim();
+            const body    = document.getElementById("body").value;
 
             let params = [];
-            if (cc) params.push(`cc=${encodeURIComponent(cc)}`);
-            if (bcc) params.push(`bcc=${encodeURIComponent(bcc)}`);
-            if (subject) params.push(`subject=${subject}`);
-            if (body) params.push(`body=${body}`);
+            if (cc)      params.push(`cc=${encodeSpecialChars(cc)}`);
+            if (bcc)     params.push(`bcc=${encodeSpecialChars(bcc)}`);
+            if (subject) params.push(`subject=${encodeSpecialChars(subject)}`);
+            if (body)    params.push(`body=${encodeSpecialChars(body)}`);
 
-            return `mailto:${encodeURIComponent(to)}${params.length ? '?' + params.join('&') : ''}`;
+            return `mailto:${encodeSpecialChars(to)}${params.length ? '?' + params.join('&') : ''}`;
         }
 
         function liveGenerate() {
@@ -375,10 +372,10 @@
             const bccEl = document.getElementById("bcc");
 
             toEl.value  = to.split(",").join("\n");
-            ccEl.value  = params.get("cc")  ? decodeURIComponent(params.get("cc")).split(",").join("\n")  : "";
-            bccEl.value = params.get("bcc") ? decodeURIComponent(params.get("bcc")).split(",").join("\n") : "";
-            document.getElementById("subject").value = params.get("subject") ? decodeURIComponent(params.get("subject")) : "";
-            document.getElementById("body").value    = params.get("body")    ? decodeURIComponent(params.get("body"))    : "";
+            ccEl.value  = (params.get("cc")  ?? "").split(",").join("\n");
+            bccEl.value = (params.get("bcc") ?? "").split(",").join("\n");
+            document.getElementById("subject").value = params.get("subject") ?? "";
+            document.getElementById("body").value    = params.get("body")    ?? "";
 
             [toEl, ccEl, bccEl].forEach(autoResize);
             liveGenerate();
