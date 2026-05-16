@@ -3,80 +3,313 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>mailtoリンクジェネレーター</title>
     <style>
         * {
-            font-family: "游ゴシック";
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
+            font-family: "游ゴシック", "Yu Gothic", sans-serif;
+            background-color: #eef2fb;
+            min-height: 100vh;
+            padding: 32px 20px;
+        }
+
+        .page-wrapper {
             max-width: 800px;
-            /* 最大幅を800pxに設定 */
-            margin: 20px auto;
-            padding: 0 20px;
-            /* スマホなどの小さい画面での余白を追加 */
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
-        textarea,
-        input {
-            width: 100%;
+        /* ── 復元カード ── */
+        .restore-card {
+            background: #fff;
+            border: 1px solid #d0d8f0;
+            border-radius: 10px;
+            padding: 16px 20px;
+            box-shadow: 0 1px 4px rgba(80, 100, 180, 0.08);
+        }
+
+        .restore-card .card-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #5a6a9a;
             margin-bottom: 10px;
-            padding: 8px;
+            letter-spacing: 0.03em;
+        }
+
+        .restore-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .restore-row input {
+            flex: 1;
+            border: 1px solid #c8d0e8;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+            color: #333;
+            background: #f8f9ff;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .restore-row input:focus {
+            border-color: #7b9de0;
+            background: #fff;
+        }
+
+        .restore-row input::placeholder {
+            color: #aab;
+        }
+
+        .btn-restore {
+            padding: 8px 18px;
+            background: #7b9de0;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.15s;
+        }
+
+        .btn-restore:hover {
+            background: #5a7fc8;
+        }
+
+        /* ── メール作成ウィンドウ ── */
+        .compose-window {
+            background: #fff;
+            border: 1px solid #c8d0e8;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(80, 100, 180, 0.12);
+            overflow: hidden;
+        }
+
+        .compose-titlebar {
+            background: linear-gradient(90deg, #e8edf8 0%, #f0f4fc 100%);
+            border-bottom: 1px solid #d0d8f0;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .compose-titlebar .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-red    { background: #f4786a; }
+        .dot-yellow { background: #f4c36a; }
+        .dot-green  { background: #6abf6a; }
+
+        .compose-titlebar .title-text {
+            font-size: 13px;
+            color: #6a78a0;
+            margin-left: 6px;
+            font-weight: bold;
+            letter-spacing: 0.04em;
+        }
+
+        .compose-fields {
+            padding: 0;
+        }
+
+        .field-row {
+            display: flex;
+            align-items: flex-start;
+            border-bottom: 1px solid #eef0f8;
+            padding: 10px 18px;
+            gap: 12px;
+        }
+
+        .field-row:last-of-type {
+            border-bottom: none;
+        }
+
+        .field-label {
+            font-size: 13px;
+            color: #8898c0;
+            min-width: 44px;
+            padding-top: 5px;
+            font-weight: bold;
+            letter-spacing: 0.02em;
+            flex-shrink: 0;
+        }
+
+        .field-row textarea,
+        .field-row input[type="text"] {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 15px;
+            color: #222;
+            font-family: inherit;
+            background: transparent;
             resize: none;
-            font-size: 20px;
+            line-height: 1.5;
+            padding: 4px 0;
         }
 
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            /* ボタンのフォントサイズを調整 */
+        .field-row textarea::placeholder,
+        .field-row input[type="text"]::placeholder {
+            color: #c0c8da;
         }
 
-        #output a {
+        .body-row {
+            padding: 14px 18px;
+            border-top: 1px solid #eef0f8;
+        }
+
+        .body-row textarea {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-size: 15px;
+            color: #222;
+            font-family: inherit;
+            background: transparent;
+            resize: none;
+            line-height: 1.6;
+            min-height: 220px;
+        }
+
+        /* ── 生成リンク表示エリア ── */
+        .link-output-area {
+            border-top: 1px solid #dce4f4;
+            background: #f4f6fc;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 52px;
+        }
+
+        .link-output-area .link-text {
+            flex: 1;
+            font-size: 13px;
+            color: #4060a8;
             word-break: break-all;
-            display: block;
-            /* リンクをブロック要素にしてクリックしやすく */
-            margin-top: 10px;
-            /* リンクの上に余白を追加 */
+            line-height: 1.5;
+        }
+
+        .link-output-area .link-text.empty {
+            color: #b0b8cc;
+            font-style: italic;
+        }
+
+        .link-output-area .link-text a {
+            color: #4060a8;
+            text-decoration: none;
+        }
+
+        .link-output-area .link-text a:hover {
+            text-decoration: underline;
+        }
+
+        .btn-copy {
+            padding: 7px 16px;
+            background: #fff;
+            color: #5a7ad0;
+            border: 1px solid #b0c0e8;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .btn-copy:hover {
+            background: #5a7ad0;
+            color: #fff;
+        }
+
+        .btn-copy.copied {
+            background: #6abf6a;
+            color: #fff;
+            border-color: #6abf6a;
         }
     </style>
 </head>
 
 <body>
-    <h2>mailto</h2>
+    <div class="page-wrapper">
 
-    <label>To（改行で複数可）</label>
-    <textarea id="to" rows="1"></textarea>
+        <!-- 復元カード -->
+        <div class="restore-card">
+            <div class="card-title">メールリンクから復元</div>
+            <div class="restore-row">
+                <input type="text" id="inputLink" placeholder="mailtoリンクをここに貼り付けて「復元」をクリック">
+                <button class="btn-restore" onclick="restoreLink()">復元</button>
+            </div>
+        </div>
 
-    <label>Cc（改行で複数可）</label>
-    <textarea id="cc" rows="1"></textarea>
+        <!-- メール作成ウィンドウ -->
+        <div class="compose-window">
+            <div class="compose-titlebar">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+                <span class="title-text">新規メール</span>
+            </div>
 
-    <label>Bcc（改行で複数可）</label>
-    <textarea id="bcc" rows="1"></textarea>
+            <div class="compose-fields">
+                <div class="field-row">
+                    <span class="field-label">To</span>
+                    <textarea id="to" rows="1" placeholder="宛先（改行で複数可）" oninput="autoResize(this); liveGenerate()"></textarea>
+                </div>
+                <div class="field-row">
+                    <span class="field-label">Cc</span>
+                    <textarea id="cc" rows="1" placeholder="（改行で複数可）" oninput="autoResize(this); liveGenerate()"></textarea>
+                </div>
+                <div class="field-row">
+                    <span class="field-label">Bcc</span>
+                    <textarea id="bcc" rows="1" placeholder="（改行で複数可）" oninput="autoResize(this); liveGenerate()"></textarea>
+                </div>
+                <div class="field-row">
+                    <span class="field-label">件名</span>
+                    <input type="text" id="subject" placeholder="件名" oninput="liveGenerate()">
+                </div>
+            </div>
 
-    <label>件名</label>
-    <input type="text" id="subject">
+            <div class="body-row">
+                <textarea id="body" placeholder="本文を入力してください…" oninput="liveGenerate()"></textarea>
+            </div>
 
-    <label>本文</label>
-    <textarea id="body" rows="15"></textarea>
+            <!-- 生成リンク表示 -->
+            <div class="link-output-area">
+                <div class="link-text empty" id="linkDisplay">入力するとリンクが自動生成されます</div>
+                <button class="btn-copy" id="copyBtn" onclick="copyLink()">コピー</button>
+            </div>
+        </div>
 
-    <button onclick="generateLink()">リンク生成</button>
-    <button onclick="generateAndCopy()">リンク生成＋コピー</button>
-
-    <h3>生成されたmailtoリンク</h3>
-    <div id="output"></div>
-
-    <label>メールリンクから各項目を復元</label>
-    <input type="text" id="inputLink" placeholder="mailtoリンクをここに貼り付けて「復元」をクリックしてください">
-    <button onclick="restoreLink()">復元</button> <!-- 復元ボタンを追加 -->
+    </div>
 
     <script>
-        function generateLink() {
+        let currentLink = "";
+
+        function autoResize(el) {
+            el.style.height = "auto";
+            el.style.height = el.scrollHeight + "px";
+        }
+
+        function buildLink() {
             const to = document.getElementById("to").value.trim().split(/\r?\n/).filter(s => s).join(",");
             const cc = document.getElementById("cc").value.trim().split(/\r?\n/).filter(s => s).join(",");
             const bcc = document.getElementById("bcc").value.trim().split(/\r?\n/).filter(s => s).join(",");
 
-            // 改行のみをエンコードする関数
             function encodeNewlinesOnly(str) {
                 return str.replace(/\r\n|\r|\n/g, match => encodeURIComponent(match));
             }
@@ -93,18 +326,36 @@
             if (subject) params.push(`subject=${subject}`);
             if (body) params.push(`body=${body}`);
 
-            const mailto = `mailto:${encodeURIComponent(to)}${params.length ? '?' + params.join('&') : ''}`;
-
-            document.getElementById("output").innerHTML = `<a href="${mailto}">${mailto}</a>`;
-            return mailto;
+            return `mailto:${encodeURIComponent(to)}${params.length ? '?' + params.join('&') : ''}`;
         }
 
-        function generateAndCopy() {
-            const link = generateLink();
-            navigator.clipboard.writeText(link).then(() => {
-                alert('リンクをコピーしました。');
+        function liveGenerate() {
+            const link = buildLink();
+            currentLink = link;
+            const display = document.getElementById("linkDisplay");
+
+            const isEmpty = link === "mailto:";
+            if (isEmpty) {
+                display.innerHTML = "入力するとリンクが自動生成されます";
+                display.classList.add("empty");
+            } else {
+                display.innerHTML = `<a href="${link}">${link}</a>`;
+                display.classList.remove("empty");
+            }
+        }
+
+        function copyLink() {
+            if (!currentLink || currentLink === "mailto:") return;
+            navigator.clipboard.writeText(currentLink).then(() => {
+                const btn = document.getElementById("copyBtn");
+                btn.textContent = "コピー済";
+                btn.classList.add("copied");
+                setTimeout(() => {
+                    btn.textContent = "コピー";
+                    btn.classList.remove("copied");
+                }, 1500);
             }).catch(err => {
-                alert('コピーに失敗しました: ' + err);
+                alert("コピーに失敗しました: " + err);
             });
         }
 
@@ -116,14 +367,21 @@
             }
 
             const url = new URL(inputLink);
-            const to = decodeURIComponent(url.pathname); // mailtoの後の部分
+            const to = decodeURIComponent(url.pathname);
             const params = new URLSearchParams(url.search);
 
-            document.getElementById("to").value = to.split(",").join("\n"); // 改行で分割して復元
-            document.getElementById("cc").value = params.get("cc") ? decodeURIComponent(params.get("cc")).split(",").join("\n") : "";
-            document.getElementById("bcc").value = params.get("bcc") ? decodeURIComponent(params.get("bcc")).split(",").join("\n") : "";
+            const toEl  = document.getElementById("to");
+            const ccEl  = document.getElementById("cc");
+            const bccEl = document.getElementById("bcc");
+
+            toEl.value  = to.split(",").join("\n");
+            ccEl.value  = params.get("cc")  ? decodeURIComponent(params.get("cc")).split(",").join("\n")  : "";
+            bccEl.value = params.get("bcc") ? decodeURIComponent(params.get("bcc")).split(",").join("\n") : "";
             document.getElementById("subject").value = params.get("subject") ? decodeURIComponent(params.get("subject")) : "";
-            document.getElementById("body").value = params.get("body") ? decodeURIComponent(params.get("body")) : "";
+            document.getElementById("body").value    = params.get("body")    ? decodeURIComponent(params.get("body"))    : "";
+
+            [toEl, ccEl, bccEl].forEach(autoResize);
+            liveGenerate();
         }
     </script>
 </body>
